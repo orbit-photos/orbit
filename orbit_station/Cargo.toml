@@ -1,0 +1,25 @@
+[package]
+name = "orbit_station"
+version = "0.1.0"
+authors = ["EtomicBomb <ethan@ethan.ws>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+piston_window = "0.110.0"
+v4l = "0.10.2"
+libc = "0.2.73"
+image = "0.23.12"
+nalgebra = "0.22.0"
+serde = { version = "1.0.118", features = ["derive"] }
+bincode = "1.3.1"
+rand = "0.7.3"
+byteorder = "1.3.4"
+orbit_types = { path = "../orbit_types" }
+chrono = "0.4.19"
+
+[dependencies.ffmpeg-sys-next]
+version = "4.3.5"
+default-features = false
+features = ["avformat", "swscale"]
