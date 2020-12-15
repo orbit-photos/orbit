@@ -8,8 +8,7 @@ use crate::polling_stream_fork::{Stream};
 use std::thread::JoinHandle;
 use crate::known_devices::KnownDevices;
 use libc::{CLOCK_MONOTONIC, timespec, clock_gettime};
-use std::sync::{Arc, Mutex};
-use orbit_types::{CapturedFrame, StreamResponse};
+use orbit_types::{CapturedFrame, SnapResponse};
 
 pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut writer: TcpStream) {
     let mut handles = Vec::new();
@@ -58,7 +57,7 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
 
     let _ = bincode::serialize_into(
         &mut writer,
-        &StreamResponse { frames },
+        &SnapResponse { frames },
     );
 }
 
