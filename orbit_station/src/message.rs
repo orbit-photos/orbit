@@ -3,8 +3,6 @@ use std::io::{Write, Read, BufReader};
 use image::{ImageDecoder, ImageFormat};
 
 use crate::picture::ImageTransformExt;
-use piston_window::{TextureSettings, Texture, WindowSettings, PistonWindow};
-use piston_window::texture::CreateTexture;
 use std::time::UNIX_EPOCH;
 
 const HELPER_IPS: &[&str] = &[

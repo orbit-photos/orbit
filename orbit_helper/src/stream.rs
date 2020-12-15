@@ -24,9 +24,7 @@ pub fn stream(
         spawn_stream_listener(device_index, device_id, writer, should_stop)
     }
 
-    loop {
-        if should_stop.load(Ordering::Relaxed) { break }
-
+    while !should_stop.load(Ordering::Relaxed) {
         for (device_index, device_id) in known_devices.recently_added() {
 
             let writer = Arc::clone(&writer);
@@ -46,6 +44,7 @@ fn spawn_stream_listener(
     should_stop: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
+        dbg!(device_id);
         match stream_inner(device_index, device_id, Arc::clone(&writer), Arc::clone(&should_stop)) {
             Ok(_) => {},
             Err(OrbitError::TcpStreamFailed(_)) => should_stop.store(true, Ordering::Relaxed), // can't report lol
@@ -75,6 +74,9 @@ fn stream_inner(
     let stream = Stream::with_buffers(&device, 1)?;
     let mut stream = stream.start()?;
 
+
+    dbg!();
+
     loop {
         if should_stop.load(Ordering::Relaxed) { break }
 
@@ -86,6 +88,8 @@ fn stream_inner(
             &mut *writer.lock().unwrap(),
             &StreamResponse::Frame(frame),
         )?;
+
+        println!("sent frame {:?}", device_id);
     }
 
     Ok(())

@@ -31,6 +31,7 @@ impl KnownDevices {
     }
 
     pub fn update(&mut self) {
+        self.current_devices.clear();
         match fs::read_dir("/sys/class/video4linux") {
             Ok(dir) => self.current_devices.extend(dir
                 .filter_map(Result::ok)
@@ -40,7 +41,7 @@ impl KnownDevices {
 
         self.to_add.clear();
         for index in self.current_devices.iter() {
-            if !!self.index_to_id.contains_key(index) {
+            if !self.index_to_id.contains_key(index) {
                 self.to_add.push(*index);
             }
         }
@@ -82,9 +83,7 @@ impl KnownDevices {
 }
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
-pub struct DeviceFileIndex {
-    pub inner: usize,
-}
+pub struct DeviceFileIndex(usize);
 
 impl DeviceFileIndex {
     pub fn from_dir_entry(dir_entry: DirEntry) -> Option<DeviceFileIndex> {
@@ -97,15 +96,15 @@ impl DeviceFileIndex {
 
         let inner = s[start..].parse().ok()?;
 
-        if is_video_device(inner) {
-            Some(DeviceFileIndex { inner })
+        if is_video_device(inner) && inner!=0 && inner!=1 {
+            Some(DeviceFileIndex(inner))
         } else {
             None
         }
     }
 
     pub fn file_index(self) -> usize {
-        self.inner
+        self.0
     }
 }
 

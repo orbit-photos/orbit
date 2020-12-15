@@ -10,6 +10,7 @@ mod calibrate;
 mod message;
 mod picture;
 mod webcam;
+mod display;
 
 const OUTPUT_WIDTH: usize = 500;
 const OUTPUT_HEIGHT: usize = 500;
@@ -31,8 +32,15 @@ use v4l::prelude::{CaptureDevice, MmapStream};
 use v4l::buffer::Stream;
 use v4l::FourCC;
 use rand::{thread_rng, Rng};
+use std::net::SocketAddr;
 
 
 fn main() {
+    let addrs: &[SocketAddr] = &[
+        "192.168.2.100:2000".parse().unwrap(),
+        // "192.168.2.101:2000".parse().unwrap(),
+    ];
 
+
+    webcam::network(&addrs);
 }

@@ -7,6 +7,8 @@ use crate::known_devices::KnownDevices;
 use libc::c_int;
 use v4l::{Format, FourCC};
 use orbit_types::{Request};
+use v4l::format::{FieldOrder, Colorspace, Quantization, TransferFunction, Flags};
+
 
 mod stream;
 mod snap;
@@ -34,7 +36,7 @@ fn main() {
             match bincode::deserialize_from(&mut connection) {
                 Ok(Request::Stream) => stream::stream(connection, &mut known_devices),
                 Ok(Request::Snap(target_time)) => {
-                    let _ = snap::snap(target_time, &mut known_devices, connection);
+                    snap::snap(target_time, &mut known_devices, connection);
                 },
                 Err(_) => {},
             }
@@ -43,8 +45,6 @@ fn main() {
 }
 
 const fn new_format(width: u32, height: u32, fourcc: &[u8; 4]) -> Format {
-    use v4l::format::{FieldOrder, Colorspace, Quantization, TransferFunction, Flags};
-
     Format {
         width,
         height,
