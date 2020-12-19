@@ -4,7 +4,7 @@ use v4l::{Buffer, Format, Timestamp};
 use serde::{Serialize, Deserialize};
 use std::time;
 
-#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub struct DeviceId(u32);
 
 pub struct DeviceIdGenerator(u32);

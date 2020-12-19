@@ -3,7 +3,7 @@ use crate::apriltag::{Detector, NoTagFound, EulerAngles};
 use crate::picture::ImageTransformExt;
 use nalgebra::Scalar;
 use std::collections::HashMap;
-use crate::webcam::CameraId;
+use crate::webcam::StreamId;
 
 pub struct CalibrationData {
     euler_angles: EulerAngles,
@@ -13,8 +13,8 @@ pub struct CalibrationData {
 
 pub fn calibrate(
     detector: &mut Detector,
-    images: &[(CameraId, GrayImage)]
-) -> Result<HashMap<CameraId, CalibrationData>, NoTagsFoundAt> {
+    images: &[(StreamId, GrayImage)]
+) -> Result<HashMap<StreamId, CalibrationData>, NoTagsFoundAt> {
 
     let mut euler_angles_map = Vec::new();
     let mut average_roll = Averager::new();
@@ -45,7 +45,7 @@ pub fn calibrate(
 }
 
 pub struct NoTagsFoundAt {
-    cameras: Vec<CameraId>,
+    cameras: Vec<StreamId>,
 }
 
 #[derive(Copy, Clone)]

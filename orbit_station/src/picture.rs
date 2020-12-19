@@ -11,56 +11,11 @@ use std::ops::{Deref, DerefMut};
 use std::f32::consts::PI;
 
 pub trait ImageTransformExt {
-    fn shift(&self, right: isize, down: isize) -> Self;
-    fn with_border(&self, new_width: usize, new_height: usize) -> Self;
     fn crop_rotate(&self, radians: f32, dst_width: f32, dst_height: f32) -> Self;
     fn rotate(&self, radians: f32) -> Self;
 }
 
 impl ImageTransformExt for DynamicImage {
-    fn shift(&self, right: isize, down: isize) -> DynamicImage {
-        // assert!(new_width >= self.width, "{} >= {} failed", new_width, self.width);
-        // assert!(new_height >= self.height, "{} >= {} failed", new_height, self.height);
-        //
-        // let right = (new_width - self.width)/2;
-        // let down = (new_height - self.height)/2;
-        //
-        // Picture::from_fn(new_width, new_height, |x, y| {
-        //     // crazy large values from underflow are handled by the <'s below
-        //     let source_x = x.wrapping_sub(right);
-        //     let source_y = y.wrapping_sub(down);
-        //
-        //     if source_x < self.width && source_y < self.height {
-        //         self.get_color(source_x, source_y)
-        //     } else {
-        //         NO_COLOR
-        //     }
-        // })
-
-        todo!()
-    }
-
-    fn with_border(&self, new_width: usize, new_height: usize) -> DynamicImage {
-        // assert!(new_width >= self.width, "{} >= {} failed", new_width, self.width);
-        // assert!(new_height >= self.height, "{} >= {} failed", new_height, self.height);
-        //
-        // let right = (new_width - self.width)/2;
-        // let down = (new_height - self.height)/2;
-        //
-        // Picture::from_fn(new_width, new_height, |x, y| {
-        //     // crazy large values from underflow are handled by the <'s below
-        //     let source_x = x.wrapping_sub(right);
-        //     let source_y = y.wrapping_sub(down);
-        //
-        //     if source_x < self.width && source_y < self.height {
-        //         self.get_color(source_x, source_y)
-        //     } else {
-        //         NO_COLOR
-        //     }
-        // })
-        todo!()
-    }
-
     fn crop_rotate(&self, radians: f32, dst_width: f32, dst_height: f32) -> DynamicImage {
         match self {
             DynamicImage::ImageLuma8(ref image) => DynamicImage::ImageLuma8(crop_rotate(image, radians, dst_width, dst_height)),

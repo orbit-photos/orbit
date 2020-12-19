@@ -2,6 +2,7 @@ use std::collections::{HashMap};
 use std::fs;
 use orbit_types::{DeviceId, DeviceIdGenerator};
 use std::fs::DirEntry;
+use crate::ACCEPTABLE_FORMAT;
 
 pub struct KnownDevices {
     index_to_id: HashMap<DeviceFileIndex, DeviceId>,
@@ -96,7 +97,7 @@ impl DeviceFileIndex {
 
         let inner = s[start..].parse().ok()?;
 
-        if is_video_device(inner) && inner!=0 && inner!=1 {
+        if is_video_device(inner) {
             Some(DeviceFileIndex(inner))
         } else {
             None
@@ -108,13 +109,15 @@ impl DeviceFileIndex {
     }
 }
 
-
 /// For some reason, when I updated to Ubuntu 20, every video device creates two files in /sys/class/video4linux.
 /// One with an odd index, and one with an even index. All of the odd ones aren't valid (ie they
 /// don't have any formats). That's what we check for here
 fn is_video_device(index: usize) -> bool {
     match v4l::capture::Device::new(index) {
-        Ok(d) => d.enum_formats().map_or(false, |l| l.len() > 0),
+        Ok(dev) => match dev.enum_formats() {
+            Ok(formats) => formats.iter().any(|f| &f.fourcc.repr == ACCEPTABLE_FORMAT),
+            Err(_) => false,
+        },
         Err(_) => false,
     }
 }

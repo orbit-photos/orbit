@@ -24,8 +24,9 @@ const POLL_TIMEOUT_MILLIS: c_int = 1000;
 // sleep between checking for new devices while streaming
 // remember
 const NEW_DEVICE_CHECK: Duration = Duration::from_secs(1);
-const SNAP_FORMAT: Format = new_format(1280, 720, b"MJPG");
-const STREAM_FORMAT: Format = new_format(300, 144, b"MJPG");
+const SNAP_FORMAT: Format = new_format(1280, 720, ACCEPTABLE_FORMAT);
+const STREAM_FORMAT: Format = new_format(300, 144, ACCEPTABLE_FORMAT);
+const ACCEPTABLE_FORMAT: &[u8; 4] = b"MJPG";
 
 fn main() {
     let mut known_devices = KnownDevices::new();

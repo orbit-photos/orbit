@@ -44,7 +44,7 @@ fn spawn_stream_listener(
     should_stop: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
-        dbg!(device_id);
+        println!("{:?} {:?}", device_index, device_id);
         match stream_inner(device_index, device_id, Arc::clone(&writer), Arc::clone(&should_stop)) {
             Ok(_) => {},
             Err(OrbitError::TcpStreamFailed(_)) => should_stop.store(true, Ordering::Relaxed), // can't report lol
@@ -73,9 +73,6 @@ fn stream_inner(
 
     let stream = Stream::with_buffers(&device, 1)?;
     let mut stream = stream.start()?;
-
-
-    dbg!();
 
     loop {
         if should_stop.load(Ordering::Relaxed) { break }

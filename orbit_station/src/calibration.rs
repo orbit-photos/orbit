@@ -65,7 +65,7 @@ pub struct CalibrationResult {
 }
 
 impl CalibrationResult {
-    pub fn calibrate(pictures: &[DynamicImage], parameters: CameraParameters, detector: &mut Detector) -> OrbitResult<CalibrationResult> {
+    pub fn calibrate(_pictures: &[DynamicImage], _parameters: CameraParameters, _detector: &mut Detector) -> OrbitResult<CalibrationResult> {
         // let mut adjustments = Vec::with_capacity(cameras.len());
         //
         // let mut output_size = OutputSize::new(parameters);
@@ -83,15 +83,7 @@ impl CalibrationResult {
         //     }
         // }
 
-        let adjustments = todo!();
-        let parameters = todo!();
-        let output_size = todo!();
-
-        Ok(CalibrationResult {
-            adjustments,
-            parameters,
-            output_size,
-        })
+        todo!()
     }
 
     pub fn capture<P: AsRef<Path>>(&self, cameras: Vec<DynamicImage>, output_path: P) -> OrbitResult<()> {
@@ -127,12 +119,10 @@ impl Adjustment {
         let roll = self.euler_angles.roll;
         let pitch = self.euler_angles.pitch;
 
-        let vertical_shift = output_size.get_vertical_shift(pitch);
+        let _vertical_shift = output_size.get_vertical_shift(pitch);
 
         image
             .rotate(-roll)
-            .with_border(output_size.output_width, output_size.output_height)
-            .shift(0, vertical_shift)
     }
 }
 

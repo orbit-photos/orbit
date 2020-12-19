@@ -34,13 +34,16 @@ use v4l::FourCC;
 use rand::{thread_rng, Rng};
 use std::net::SocketAddr;
 
+const INITIAL_WINDOW_WIDTH: u32 = 920;
+const INITIAL_WINDOW_HEIGHT: u32 = 800;
+const STREAM_ASPECT_RATIO: (u32, u32) = (16, 9);
+
 
 fn main() {
     let addrs: &[SocketAddr] = &[
         "192.168.2.100:2000".parse().unwrap(),
         // "192.168.2.101:2000".parse().unwrap(),
     ];
-
 
     webcam::network(&addrs);
 }
