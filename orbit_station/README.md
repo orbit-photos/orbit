@@ -15,6 +15,7 @@ ffmpeg clang libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev
 libavresample-dev libavutil-dev libpostproc-dev libswresample-dev libswscale-dev pkg-config 
 
 * apriltag (https://github.com/AprilRobotics/apriltag)
+* libturbojpeg0-dev package 
 * others I'm forgetting
 
 

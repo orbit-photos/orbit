@@ -50,10 +50,7 @@ fn spawn_stream_listener(
             Err(OrbitError::TcpStreamFailed(_)) => should_stop.store(true, Ordering::Relaxed), // can't report lol
             Err(OrbitError::WebcamFailed(_)) => {
                 // ignore error because nothing to do
-                let _ = bincode::serialize_into(
-                    &mut *writer.lock().unwrap(),
-                    &StreamResponse::Stop(device_id)
-                );
+                let _ = StreamResponse::Stop(device_id).serialize_into(&mut *writer.lock().unwrap());
             }
         }
     });
@@ -81,10 +78,7 @@ fn stream_inner(
 
         let frame = CapturedFrame::from_frame(frame, used_format, boot_time_utc, device_id);
 
-        bincode::serialize_into(
-            &mut *writer.lock().unwrap(),
-            &StreamResponse::Frame(frame),
-        )?;
+        StreamResponse::Frame(frame).serialize_into(&mut *writer.lock().unwrap())?;
 
         println!("sent frame {:?}", device_id);
     }

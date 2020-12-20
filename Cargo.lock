@@ -1266,6 +1266,7 @@ dependencies = [
 name = "orbit_types"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "chrono",
  "serde",
  "v4l",

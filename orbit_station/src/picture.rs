@@ -72,6 +72,8 @@ fn crop_rotate<P: Pixel + 'static>(
 
     let [m0, m1, m2, m3] = rotation_matrix(radians);
 
+    // 0.5 -
+
     let x_offset = src_center_x - (m0*dst_center_x + m1*dst_center_y);
     let y_offset = src_center_y - (m2*dst_center_x + m3*dst_center_y);
 
@@ -164,7 +166,7 @@ pub fn crop_rotate_dimensions(src_width: f32, src_height: f32, radians: f32) -> 
     }
 }
 
-fn rotation_matrix(t: f32) -> [f32; 4] {
+pub fn rotation_matrix(t: f32) -> [f32; 4] {
     [
         t.cos(), -t.sin(),
         t.sin(), t.cos(),

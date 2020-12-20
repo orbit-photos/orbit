@@ -45,5 +45,7 @@ fn main() {
         // "192.168.2.101:2000".parse().unwrap(),
     ];
 
+    // println!("{}", webcam::integer_square_root(0));
+
     webcam::network(&addrs);
 }
