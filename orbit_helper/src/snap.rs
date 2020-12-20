@@ -57,7 +57,7 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
 
     let _ = bincode::serialize_into(
         &mut writer,
-        &SnapResponse { frames },
+        &SnapResponse { stills: frames },
     );
 }
 

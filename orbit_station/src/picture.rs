@@ -1,14 +1,5 @@
-
-use std::fs::File;
-use std::path::Path;
-use std::ffi::OsStr;
-use image::{ImageEncoder, ImageDecoder, ImageFormat, RgbImage, ImageBuffer, Rgb, RgbaImage, DynamicImage, GenericImageView, Pixel};
-use std::convert::TryInto;
-use std::io::Read;
-use image::jpeg::JpegDecoder;
-use image::buffer::ConvertBuffer;
+use image::{ImageBuffer, DynamicImage, Pixel};
 use std::ops::{Deref, DerefMut};
-use std::f32::consts::PI;
 
 pub trait ImageTransformExt {
     fn crop_rotate(&self, radians: f32, dst_width: f32, dst_height: f32) -> Self;

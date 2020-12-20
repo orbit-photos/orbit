@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["orbit_station", "orbit_helper", "orbit_types"]
+members = ["orbit_station", "orbit_helper", "orbit_types", "apriltag"]

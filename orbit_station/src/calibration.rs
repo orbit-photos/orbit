@@ -1,8 +1,7 @@
 use crate::picture::ImageTransformExt;
 use crate::camera::CameraParameters;
-use std::{thread, io};
-use std::sync::{Arc};
-use crate::apriltag::{Detector, NoTagFound, EulerAngles};
+use std::{io};
+use apriltag::{Detector, NoTagFound, EulerAngles};
 use std::path::Path;
 use crate::mpeg_encoder::Encoder;
 use image::{DynamicImage, GenericImageView, GrayImage};
