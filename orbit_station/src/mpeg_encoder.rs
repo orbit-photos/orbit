@@ -49,10 +49,8 @@ use ffmpeg_sys_next::{SwsContext, AVCodec, AVCodecContext, AVPacket, AVFormatCon
                       AVFrame, AVRational, AVPixelFormat, AVPicture, AVCodecID};
 use std::ptr;
 use std::mem;
-use std::iter;
 use std::path::{Path, PathBuf};
 use std::ffi::CString;
-use std::iter::FromIterator;
 use std::sync::Once;
 use image::RgbImage;
 

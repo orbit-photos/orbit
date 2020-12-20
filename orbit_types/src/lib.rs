@@ -29,7 +29,7 @@ pub enum Request {
 
 #[derive(Serialize, Deserialize)]
 pub struct SnapResponse {
-    pub frames: Vec<CapturedFrame>,
+    pub stills: Vec<CapturedFrame>,
 }
 
 pub enum StreamResponse {

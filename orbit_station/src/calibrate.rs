@@ -1,7 +1,5 @@
-use image::{GrayImage, DynamicImage, ImageResult};
-use crate::apriltag::{Detector, NoTagFound, EulerAngles};
-use crate::picture::ImageTransformExt;
-use nalgebra::Scalar;
+use image::{GrayImage};
+use apriltag::{Detector, EulerAngles};
 use std::collections::HashMap;
 use crate::webcam::StreamId;
 
