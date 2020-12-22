@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 pub trait ImageTransformExt {
     fn crop_rotate(&self, radians: f32, dst_width: f32, dst_height: f32) -> Self;
-    fn rotate(&self, radians: f32) -> Self;
+    // fn rotate(&self, radians: f32) -> Self;
 }
 
 impl ImageTransformExt for DynamicImage {
@@ -22,20 +22,20 @@ impl ImageTransformExt for DynamicImage {
         }
     }
     
-    fn rotate(&self, radians: f32) -> DynamicImage {
-        match self {
-            DynamicImage::ImageLuma8(ref image) => DynamicImage::ImageLuma8(rotate(image, radians)),
-            DynamicImage::ImageLumaA8(ref image) => DynamicImage::ImageLumaA8(rotate(image, radians)),
-            DynamicImage::ImageRgb8(ref image) => DynamicImage::ImageRgb8(rotate(image, radians)),
-            DynamicImage::ImageRgba8(ref image) => DynamicImage::ImageRgba8(rotate(image, radians)),
-            DynamicImage::ImageBgr8(ref image) => DynamicImage::ImageBgr8(rotate(image, radians)),
-            DynamicImage::ImageBgra8(ref image) => DynamicImage::ImageBgra8(rotate(image, radians)),
-            DynamicImage::ImageLuma16(ref image) => DynamicImage::ImageLuma16(rotate(image, radians)),
-            DynamicImage::ImageLumaA16(ref image) => DynamicImage::ImageLumaA16(rotate(image, radians)),
-            DynamicImage::ImageRgb16(ref image) => DynamicImage::ImageRgb16(rotate(image, radians)),
-            DynamicImage::ImageRgba16(ref image) => DynamicImage::ImageRgba16(rotate(image, radians)),
-        }
-    }
+    // fn rotate(&self, radians: f32) -> DynamicImage {
+    //     match self {
+    //         DynamicImage::ImageLuma8(ref image) => DynamicImage::ImageLuma8(rotate(image, radians)),
+    //         DynamicImage::ImageLumaA8(ref image) => DynamicImage::ImageLumaA8(rotate(image, radians)),
+    //         DynamicImage::ImageRgb8(ref image) => DynamicImage::ImageRgb8(rotate(image, radians)),
+    //         DynamicImage::ImageRgba8(ref image) => DynamicImage::ImageRgba8(rotate(image, radians)),
+    //         DynamicImage::ImageBgr8(ref image) => DynamicImage::ImageBgr8(rotate(image, radians)),
+    //         DynamicImage::ImageBgra8(ref image) => DynamicImage::ImageBgra8(rotate(image, radians)),
+    //         DynamicImage::ImageLuma16(ref image) => DynamicImage::ImageLuma16(rotate(image, radians)),
+    //         DynamicImage::ImageLumaA16(ref image) => DynamicImage::ImageLumaA16(rotate(image, radians)),
+    //         DynamicImage::ImageRgb16(ref image) => DynamicImage::ImageRgb16(rotate(image, radians)),
+    //         DynamicImage::ImageRgba16(ref image) => DynamicImage::ImageRgba16(rotate(image, radians)),
+    //     }
+    // }
 }
 
 /// # Preconditions
@@ -53,7 +53,8 @@ fn crop_rotate<P: Pixel + 'static>(
     let src_center_x = src_width / 2.0 - 0.5;
     let src_center_y = src_height / 2.0 - 0.5;
 
-    let (max_dst_width, max_dst_height) = crop_rotate_dimensions(src_width, src_height, radians);
+    let (max_dst_width, max_dst_height) = crop_rotate_dimensions(src_width as f64, src_height as f64, radians as f64);
+    let (max_dst_width, max_dst_height) = (max_dst_width as f32, max_dst_height as f32);
     assert!(dst_width <= max_dst_width);
     assert!(dst_height <= max_dst_height);
     assert_eq!(dst_width/dst_height, src_width/src_height, "aspect ratio doesn't match");
@@ -62,8 +63,6 @@ fn crop_rotate<P: Pixel + 'static>(
     let dst_center_y = dst_height / 2.0;
 
     let [m0, m1, m2, m3] = rotation_matrix(radians);
-
-    // 0.5 -
 
     let x_offset = src_center_x - (m0*dst_center_x + m1*dst_center_y);
     let y_offset = src_center_y - (m2*dst_center_x + m3*dst_center_y);
@@ -141,21 +140,34 @@ fn rotate<P: image::Pixel + 'static>(
 }
 
 
-pub fn crop_rotate_dimensions(src_width: f32, src_height: f32, radians: f32) -> (f32, f32) {
-    // TODO: fix because the two expressions in the if statements are identical
-
-    if src_width > src_height {
-        let dst_width = src_width * src_height / (src_height*radians.cos().abs() + src_width*radians.sin().abs());
-        let dst_height = dst_width * src_height / src_width;
-        // let dst_height = src_height * src_height / (src_height*radians.cos().abs() + src_width*radians.sin().abs());
-        (dst_width, dst_height)
+pub fn crop_rotate_scale(frac_height_width: f64, radians: f64) -> f64 {
+    if frac_height_width < 1.0 { // means width > height
+        frac_height_width / (frac_height_width*radians.cos().abs() + radians.sin().abs())
     } else {
-        let dst_width = src_width * src_width / (src_height*radians.sin().abs() + src_width*radians.cos().abs());
-        let dst_height = dst_width * src_height / src_width;
-        // let dst_height = src_width * src_height / (src_height*radians.sin().abs() + src_width*radians.cos().abs());
-        (dst_width, dst_height)
+        1.0 / (frac_height_width*radians.sin().abs() + radians.cos().abs())
     }
 }
+
+pub fn crop_rotate_dimensions(src_width: f64, src_height: f64, radians: f64) -> (f64, f64) {
+    let scale = crop_rotate_scale(src_height/src_width, radians);
+    (scale*src_width, scale*src_height)
+}
+
+// pub fn crop_rotate_dimensions(src_width: f32, src_height: f32, radians: f32) -> (f32, f32) {
+//     // TODO: fix because the two expressions in the if statements are identical
+//
+//     if src_width > src_height {
+//         let dst_width = src_width * src_height / (src_height*radians.cos().abs() + src_width*radians.sin().abs());
+//         let dst_height = dst_width * src_height / src_width;
+//         // let dst_height = src_height * src_height / (src_height*radians.cos().abs() + src_width*radians.sin().abs());
+//         (dst_width, dst_height)
+//     } else {
+//         let dst_width = src_width * src_width / (src_height*radians.sin().abs() + src_width*radians.cos().abs());
+//         let dst_height = dst_width * src_height / src_width;
+//         // let dst_height = src_width * src_height / (src_height*radians.sin().abs() + src_width*radians.cos().abs());
+//         (dst_width, dst_height)
+//     }
+// }
 
 pub fn rotation_matrix(t: f32) -> [f32; 4] {
     [

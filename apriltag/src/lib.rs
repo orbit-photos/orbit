@@ -1,39 +1,44 @@
+#![allow(dead_code)]
+
 mod sys;
 
 use std::mem::MaybeUninit;
-use nalgebra::{Matrix3, Rotation3};
+use nalgebra::{Matrix3, Rotation3, Point3};
 use sys::*;
 use std::os::raw::c_int;
 
-pub struct Detector {
+pub struct ApriltagDetector {
     detector: *mut apriltag_detector_t,
     family: *mut apriltag_family_t,
-    image_width: u32,
-    image_height: u32,
-    focal_length_pixels: f64,
-    tag_size_meters: f32,
 }
 
-impl Detector {
-    pub fn new(image_width: u32, image_height: u32, focal_length_pixels: f64, tag_size_meters: f32) -> Detector {
+impl ApriltagDetector {
+    pub fn new() -> ApriltagDetector {
         unsafe {
             let family = tag36h11_create();
             let detector = apriltag_detector_create();
             apriltag_detector_add_family_bits(detector, family, 2);
 
-            Detector { detector, family, image_width, image_height, focal_length_pixels, tag_size_meters }
+            ApriltagDetector { detector, family }
         }
     }
 
-    pub fn camera_euler_angles(&mut self, gray_image_data: &[u8]) -> Result<EulerAngles, NoTagFound> {
-        assert_eq!(self.image_width*self.image_height, gray_image_data.len() as u32);
+    pub fn search(
+        &mut self,
+        gray_image_data: &[u8],
+        image_width: u32,
+        image_height: u32,
+        tag_size_meters: f64,
+        focal_length_pixels: f64,
+    ) -> Result<ApriltagDetection, NoTagFound> {
+        assert_eq!(image_width*image_height, gray_image_data.len() as u32);
 
         unsafe {
             let greyscale = &mut image_u8_t {
-                width: self.image_width as c_int,
-                height: self.image_height as c_int,
-                stride: self.image_width as c_int,
-                buf: gray_image_data.as_ptr() as *mut u8,
+                width: image_width as c_int,
+                height: image_height as c_int,
+                stride: image_width as c_int,
+                buf: gray_image_data.as_ptr() as *mut _,
             };
 
             let detections = apriltag_detector_detect(self.detector, greyscale);
@@ -45,29 +50,29 @@ impl Detector {
 
             let mut info = apriltag_detection_info_t {
                 det: detection,
-                tagsize: self.tag_size_meters as f64,
-                fx: self.focal_length_pixels as f64,
-                fy: self.focal_length_pixels as f64,
-                cx: self.image_width as f64 / 2.0,
-                cy: self.image_height as f64 / 2.0,
+                tagsize: tag_size_meters,
+                fx: focal_length_pixels,
+                fy: focal_length_pixels,
+                cx: image_width as f64 / 2.0,
+                cy: image_height as f64 / 2.0,
             };
 
             let mut pose: MaybeUninit<_> = MaybeUninit::zeroed();
-            let _error = estimate_tag_pose(&mut info, pose.as_mut_ptr());
+            let error = estimate_tag_pose(&mut info, pose.as_mut_ptr());
             let pose: apriltag_pose_t = pose.assume_init();
 
-            let euler_angles = EulerAngles::from_apriltag_pose(pose);
+            let detection = ApriltagDetection::from_pose(pose, error);
 
             matd_destroy(pose.R);
             matd_destroy(pose.t);
             apriltag_detections_destroy(detections);
 
-            Ok(euler_angles)
+            Ok(detection)
         }
     }
 }
 
-impl Drop for Detector {
+impl Drop for ApriltagDetector {
     fn drop(&mut self) {
         unsafe {
             apriltag_detector_destroy(self.detector);
@@ -79,30 +84,39 @@ impl Drop for Detector {
 #[derive(Debug)]
 pub struct NoTagFound;
 
-#[derive(Debug, Copy, Clone)]
-pub struct EulerAngles {
-    pub pitch: f32,
-    pub roll: f32,
-    pub yaw: f32,
+pub struct ApriltagDetection {
+    error: f64,
+    rotation: Rotation3<f64>,
+    translation: Point3<f64>,
 }
 
-impl EulerAngles {
-    unsafe fn from_apriltag_pose(pose: apriltag_pose_t) -> EulerAngles {
+impl ApriltagDetection {
+    unsafe fn from_pose(pose: apriltag_pose_t, error: f64) -> ApriltagDetection {
         let matd_rot = pose.R;
         assert_eq!((*matd_rot).nrows, 3);
         assert_eq!((*matd_rot).ncols, 3);
-        let elems = (*matd_rot).data.as_slice(9);
+        let rotation_matrix_elems = (*matd_rot).data.as_slice(9);
+        let rotation_matrix = Matrix3::from_row_slice(rotation_matrix_elems);
+        let rotation = Rotation3::from_matrix(&rotation_matrix).inverse(); // convert from
 
-        let matrix = Matrix3::from_row_slice(elems);
+        let matd_trans = pose.t;
+        assert_eq!((*matd_trans).nrows, 3);
+        assert_eq!((*matd_trans).ncols, 1);
+        let translation_vector_components = (*matd_trans).data.as_slice(3);
+        let translation = Point3::from_slice(translation_vector_components);
 
-        let (rx, ry, rz) = Rotation3::from_matrix(&matrix)
-            .inverse() // convert from apriltag pose to camera pose
-            .euler_angles();
-
-        EulerAngles {
-            pitch: rx as f32,
-            roll: ry as f32,
-            yaw: rz as f32,
-        }
+        ApriltagDetection { error, rotation, translation }
     }
+
+    pub fn euler_angles(&self) -> EulerAngles {
+        let (pitch, roll, yaw) = self.rotation.euler_angles();
+        EulerAngles { pitch, roll, yaw }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct EulerAngles {
+    pub pitch: f64,
+    pub roll: f64,
+    pub yaw: f64,
 }
