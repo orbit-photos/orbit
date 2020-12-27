@@ -71,6 +71,7 @@ fn stream_inner(
     let stream = Stream::with_buffers(&device, 1)?;
     let mut stream = stream.start()?;
 
+    println!("started streaming device {:?}", device_id);
     loop {
         if should_stop.load(Ordering::Relaxed) { break }
 
@@ -79,9 +80,8 @@ fn stream_inner(
         let frame = CapturedFrame::from_frame(frame, used_format, boot_time_utc, device_id);
 
         StreamResponse::Frame(frame).serialize_into(&mut *writer.lock().unwrap())?;
-
-        println!("sent frame {:?}", device_id);
     }
+    println!("stop stream {:?} requested", device_id);
 
     Ok(())
 }

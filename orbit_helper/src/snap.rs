@@ -39,7 +39,7 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
 
                 last_diff = diff;
                 last_frame = frame;
-            };
+            }
 
             Ok(last_frame)
         });
@@ -47,17 +47,17 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
         handles.push(handle);
     }
 
-    let mut frames = Vec::new();
+    let mut stills = Vec::new();
 
     for handle in handles {
         if let Ok(frame) = handle.join().unwrap() {
-            frames.push(frame);
+            stills.push(frame);
         }
     }
 
     let _ = bincode::serialize_into(
         &mut writer,
-        &SnapResponse { stills: frames },
+        &SnapResponse { stills },
     );
 }
 

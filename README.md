@@ -26,6 +26,7 @@ Then, Add a new row to the 'Address' table, with Address=192.168.2.1, Netmask=24
 ## Device configuration
 Model in use is NanoPi NEO-LTS (https://www.friendlyarm.com/index.php?route=product/product&product_id=132).
 The operating system currently in use is 'Armbian 20.08.5 Buster with Linux 5.8.11-sunxi'.
+We might need to reformat the disk after we put the image on?? I used the disks program on my computer.
 We have to add a significant amount of swap so the system doesn't crash. Also, make sure to keep the
 computers cool (with fans and heatsinks).
 Make the hostname helper0, helper1, helper2, etc. The username should be identical to the hostname. The
