@@ -29,24 +29,23 @@ The operating system currently in use is 'Armbian 20.08.5 Buster with Linux 5.8.
 We might need to reformat the disk after we put the image on?? I used the disks program on my computer.
 We have to add a significant amount of swap so the system doesn't crash. Also, make sure to keep the
 computers cool (with fans and heatsinks).
+
 Make the hostname helper0, helper1, helper2, etc. The username should be identical to the hostname. The
 password should be set as 'armbian'
-Edit `/etc/network/interfaces`:
-```
-source /etc/network/interfaces.d/*
-# Network is managed by Network manager
-auto lo
-iface lo inet loopback
 
-auto eth0
-allow-hotplug eth0
-#no-auto-down eth0
-iface eth0 inet static
-address 192.168.2.10_ # <-------- IMPORTANT: 192.168.2.100 for helper0, 192.168.2.101 for helper1, etc.
-netmask 255.255.255.0
-gateway 192.168.2.1
-dns-nameservers 192.168.2.1
-```
+### Network Config 
+
+* Run `nmtui`
+* Select Edit a Connection
+* Select Add
+* Make the type Ethernet
+* Make the profile name Static
+* Make the device `eth0`
+* Click Show under IPv4 to expand that section
+* Add 192.168.2.10x/24 to the Addresses section
+* Make the gateway 192.168.2.1
+* Add 192.168.2.1 to the DNS servers
+* Delete the other connections
 
 Packages that must be installed on the helper computers include:
 * v4l-utils (maybe just for debugging, but it might even be necessary)
@@ -58,10 +57,8 @@ permanently applying the bandwidth fix
 
 The `orbit_helper` binary should be installed at `/home/helper_/orbit_helper`
 
-Then, a line must be added to the crontab:
-```
-@reboot /home/helper_/orbit_helper # IMPORTANT: change helper_ to correct index
-```
+We probably want to make orbit_helper run automatically
+in rc.local
 
 ## Building `orbit_helper`:
 

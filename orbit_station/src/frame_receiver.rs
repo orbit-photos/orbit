@@ -1,4 +1,3 @@
-use crate::state::StreamId;
 use image::{RgbImage, ImageFormat};
 use std::net::{SocketAddr, TcpStream};
 use orbit_types::{CapturedFrame, Request, StreamResponse, SnapResponse};
@@ -9,14 +8,15 @@ use std::{thread, io};
 use std::io::BufReader;
 use chrono::Utc;
 use crate::STILL_CAPTURE_DELAY_MILLIS;
+use crate::streams::StreamSource;
 
 pub enum Message {
-    StreamDeregistered(StreamId),
-    NewImage(StreamId, RgbImage),
+    StreamDeregistered(StreamSource),
+    NewImage(StreamSource, RgbImage),
     Stills(u32, Vec<(SocketAddr, Vec<CapturedFrame>)>),
 }
 
-pub fn capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message>, pictures_taken: Arc<AtomicU32>) {
+pub fn spawn_capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message>, pictures_taken: Arc<AtomicU32>) {
     thread::spawn(move || {
         loop {
             // streaming mode
@@ -72,11 +72,11 @@ fn stream(
 
         match response {
             StreamResponse::Stop(device_id) => {
-                let stream_id = StreamId::new(socket_addr, device_id);
+                let stream_id = StreamSource::new(socket_addr, device_id);
                 message_sender.send(Message::StreamDeregistered(stream_id)).unwrap();
             },
             StreamResponse::Frame(frame) => {
-                let stream_id = StreamId::new(socket_addr, frame.device_id());
+                let stream_id = StreamSource::new(socket_addr, frame.device_id());
 
                 let image = image::load_from_memory_with_format(
                     frame.frame_data(),

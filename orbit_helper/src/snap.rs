@@ -17,7 +17,6 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
 
     for (d, device_id) in known_devices.video_devices() {
         let handle: JoinHandle<io::Result<CapturedFrame>> = thread::spawn(move || {
-
             let mut dev = CaptureDevice::new(d.file_index())?;
             let used_format = dev.set_format(&SNAP_FORMAT)?;
             let stream = Stream::with_buffers(&mut dev, 1)?;
@@ -32,7 +31,7 @@ pub fn snap(target_time: DateTime<Utc>, known_devices: &mut KnownDevices, mut wr
                 let frame = active.next()?;
                 let frame = CapturedFrame::from_frame(&frame, used_format, boot_time_utc, device_id);
 
-                let diff = duration_abs(target_time - *frame.captured_at());
+                let diff = duration_abs(dbg!(target_time) - dbg!(*frame.captured_at()));
 
                 // now we are getting further away from the target time
                 if diff >= last_diff { break }

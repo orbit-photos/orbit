@@ -8,7 +8,10 @@ use libc::c_int;
 use v4l::{Format, FourCC};
 use orbit_types::{Request};
 use v4l::format::{FieldOrder, Colorspace, Quantization, TransferFunction, Flags};
-
+use std::{thread, io, io::Write};
+use std::fs::{File, OpenOptions};
+use chrono::Local;
+use std::path::PathBuf;
 
 mod stream;
 mod snap;
@@ -27,13 +30,29 @@ const NEW_DEVICE_CHECK: Duration = Duration::from_secs(1);
 const SNAP_FORMAT: Format = new_format(1280, 720, ACCEPTABLE_FORMAT);
 const STREAM_FORMAT: Format = new_format(300, 144, ACCEPTABLE_FORMAT);
 const ACCEPTABLE_FORMAT: &[u8; 4] = b"MJPG";
+const CRASH_RETRY_DELAY: Duration = Duration::from_secs(2);
+
 
 fn main() {
+    let mut log_file = get_log_file();
+
+    loop {
+        let _ = writeln!(log_file, "{}: started", Local::now());
+        println!("started");
+        let error = run();
+        let _ = writeln!(log_file, "{}: restarting because of error {:?}", Local::now(), error);
+        println!("restarting");
+        thread::sleep(CRASH_RETRY_DELAY);
+    }
+}
+
+fn run() -> io::Result<()> {
     let mut known_devices = KnownDevices::new();
 
-    let listener = TcpListener::bind("0.0.0.0:2000").unwrap();
+    let listener = TcpListener::bind("0.0.0.0:2000")?;
     for connection in listener.incoming() {
         if let Ok(mut connection) = connection {
+            println!("handling new connection");
             match bincode::deserialize_from(&mut connection) {
                 Ok(Request::Stream) => stream::stream(connection, &mut known_devices),
                 Ok(Request::Snap(target_time)) => {
@@ -43,6 +62,20 @@ fn main() {
             }
         }
     }
+
+    Ok(())
+}
+
+fn get_log_file() -> File {
+    let path = std::env::var_os("HOME").unwrap();
+    println!("opening log file at {:?}", path);
+    let path = PathBuf::from(path).join(".orbit_log");
+
+    OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .unwrap()
 }
 
 const fn new_format(width: u32, height: u32, fourcc: &[u8; 4]) -> Format {

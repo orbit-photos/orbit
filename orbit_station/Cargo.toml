@@ -19,6 +19,7 @@ orbit_types = { path = "../orbit_types" }
 chrono = "0.4.19"
 glium = "0.29.0"
 apriltag = { path = "../apriltag" }
+toml = "0.5.8"
 
 [dependencies.ffmpeg-sys-next]
 version = "4.3.5"

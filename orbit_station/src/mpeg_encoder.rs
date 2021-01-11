@@ -45,8 +45,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Inspired by the muxing sample: http://ffmpeg.org/doxygen/trunk/muxing_8c-source.html
 
-use ffmpeg_sys_next::{SwsContext, AVCodec, AVCodecContext, AVPacket, AVFormatContext, AVStream,
-                      AVFrame, AVRational, AVPixelFormat, AVPicture, AVCodecID};
+use ffmpeg_sys_next::{
+    SwsContext, AVCodec, AVCodecContext, AVPacket, AVFormatContext, AVStream, AVFrame, AVRational,
+    AVPixelFormat, AVPicture, AVCodecID
+};
+
 use std::ptr;
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -57,7 +60,7 @@ use image::RgbImage;
 static mut AVFORMAT_INIT: Once = Once::new();
 
 /// MPEG video recorder.
-pub struct Encoder {
+pub struct MpegEncoder {
     tmp_frame_buf: Vec<u8>,
     frame_buf: Vec<u8>,
     curr_frame_index: usize,
@@ -78,15 +81,15 @@ pub struct Encoder {
     path: PathBuf,
 }
 
-impl Encoder {
+impl MpegEncoder {
     /// Creates a new video recorder.
     ///
     /// # Arguments:
     /// * `path`   - path to the output file.
     /// * `width`  - width of the recorded video.
     /// * `height` - height of the recorded video.
-    pub fn new<P: AsRef<Path>>(path: P, width: usize, height: usize) -> Encoder {
-        Encoder::new_with_params(path, width, height, None, None, None, None, None)
+    pub fn new<P: AsRef<Path>>(path: P, width: usize, height: usize) -> MpegEncoder {
+        MpegEncoder::new_with_params(path, width, height, None, None, None, None, None)
     }
 
     /// Creates a new video recorder with custom recording parameters.
@@ -110,7 +113,7 @@ impl Encoder {
         gop_size: Option<usize>,
         max_b_frames: Option<usize>,
         pix_fmt: Option<AVPixelFormat>
-    ) -> Encoder {
+    ) -> MpegEncoder {
         unsafe {
             AVFORMAT_INIT.call_once(|| {
                 ffmpeg_sys_next::av_register_all();
@@ -123,21 +126,12 @@ impl Encoder {
         let max_b_frames = max_b_frames.unwrap_or(1);
         let pix_fmt = pix_fmt.unwrap_or(AVPixelFormat::AV_PIX_FMT_YUV420P);
         // width and height must be a multiple of two.
-        let width = if width % 2 == 0 {
-            width
-        } else {
-            width + 1
-        };
-        let height = if height % 2 == 0 {
-            height
-        } else {
-            height + 1
-        };
+        let width = width + if width%2 == 0 { 0 } else { 1 };
+        let height = height + if height%2 == 0 { 0 } else { 1 };
 
-        let mut pathbuf = PathBuf::new();
-        pathbuf.push(path);
 
-        Encoder {
+
+        MpegEncoder {
             initialized: false,
             curr_frame_index: 0,
             bit_rate,
@@ -153,7 +147,7 @@ impl Encoder {
             scale_context: ptr::null_mut(),
             format_context: ptr::null_mut(),
             video_st: ptr::null_mut(),
-            path: pathbuf,
+            path: path.as_ref().into(),
             frame_buf: Vec::new(),
             tmp_frame_buf: Vec::new(),
         }
@@ -163,7 +157,7 @@ impl Encoder {
         self.encode_rgb(
             image.width() as usize,
             image.height() as usize,
-            &*image
+            image.as_raw(),
         );
     }
 
@@ -206,20 +200,19 @@ impl Encoder {
         // Convert the snapshot frame to the right format for the destination frame.
         //
         unsafe {
-            self.scale_context =
-                ffmpeg_sys_next::sws_getCachedContext(
-                    self.scale_context,
-                    width as i32,
-                    height as i32,
-                    AVPixelFormat::AV_PIX_FMT_RGB24,
-                    self.target_width as i32,
-                    self.target_height as i32,
-                    AVPixelFormat::AV_PIX_FMT_YUV420P,
-                    ffmpeg_sys_next::SWS_BICUBIC as i32,
-                    ptr::null_mut(),
-                    ptr::null_mut(),
-                    ptr::null()
-                );
+            self.scale_context = ffmpeg_sys_next::sws_getCachedContext(
+                self.scale_context,
+                width as i32,
+                height as i32,
+                AVPixelFormat::AV_PIX_FMT_RGB24,
+                self.target_width as i32,
+                self.target_height as i32,
+                AVPixelFormat::AV_PIX_FMT_YUV420P,
+                ffmpeg_sys_next::SWS_BICUBIC as i32,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null()
+            );
 
             let _ = ffmpeg_sys_next::sws_scale(
                 self.scale_context,
@@ -428,7 +421,7 @@ impl Encoder {
     }
 }
 
-impl Drop for Encoder {
+impl Drop for MpegEncoder {
     fn drop(&mut self) {
         if self.initialized {
             // Get the delayed frames.

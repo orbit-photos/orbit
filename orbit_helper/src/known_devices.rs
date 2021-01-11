@@ -110,8 +110,7 @@ impl DeviceFileIndex {
 }
 
 /// For some reason, when I updated to Ubuntu 20, every video device creates two files in /sys/class/video4linux.
-/// One with an odd index, and one with an even index. All of the odd ones aren't valid (ie they
-/// don't have any formats). That's what we check for here
+/// One doesn't work. Let's make sure all the video devices we find work
 fn is_video_device(index: usize) -> bool {
     match v4l::capture::Device::new(index) {
         Ok(dev) => match dev.enum_formats() {

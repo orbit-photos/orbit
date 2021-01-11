@@ -52,8 +52,6 @@ impl ApriltagDetector {
                 (*detections).size as usize,
             );
 
-            dbg!((*detections).size as usize);
-
             let ret: Vec<_> = detections_slice.iter()
                 .map(|&detection| {
                     let mut info = apriltag_detection_info_t {
@@ -65,16 +63,12 @@ impl ApriltagDetector {
                         cy: image_height as f64 / 2.0,
                     };
 
-                    dbg!();
-
                     let mut pose: MaybeUninit<_> = MaybeUninit::zeroed();
                     let error = estimate_tag_pose(&mut info, pose.as_mut_ptr());
                     let pose: apriltag_pose_t = pose.assume_init();
 
                     let center: [f64; 2] = (*detection).c;
                     let corners: [[f64; 2]; 4] = (*detection).p;
-
-                    dbg!();
 
                     let d = ApriltagDetection::from_pose(
                         pose,
@@ -89,8 +83,6 @@ impl ApriltagDetector {
                         ],
                     );
 
-                    dbg!();
-
                     matd_destroy(pose.R);
                     matd_destroy(pose.t);
 
@@ -99,8 +91,6 @@ impl ApriltagDetector {
                 .collect();
 
             apriltag_detections_destroy(detections);
-
-            dbg!();
 
             ret
         }
@@ -157,7 +147,7 @@ impl ApriltagDetection {
     }
 
     pub fn euler_angles(&self) -> EulerAngles {
-        let (pitch, roll, yaw) = self.rotation.euler_angles();
+        let (pitch, yaw, roll) = self.rotation.euler_angles();
         EulerAngles { pitch, roll, yaw }
     }
 }
