@@ -52,6 +52,8 @@ impl Streams {
             stream_info.adjustment = Some(adjustment);
             self.crop_factor = self.crop_factor.min(adjustment.get_crop_factor());
         }
+
+        println!("calibrated");
     }
 
     pub fn flip(&mut self, ordinal: StreamOrdinal) {
@@ -186,7 +188,7 @@ impl FlipFlop {
     fn rotate_image(self, image: &DynamicImage) -> DynamicImage {
         // N.B.: `image` likes to rotate images clockwise, and the convention with math
         // is that we do rotations counter-clockwise. So that's why the angles here don't match
-        // `CardinalRotation::get_angle()`
+        // `FlipFlop::get_angle()`
         match self {
             FlipFlop { flop: false, flip: false } => image.clone(),
             FlipFlop { flop: false, flip: true } => image.rotate180(),

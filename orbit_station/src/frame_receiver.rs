@@ -2,31 +2,30 @@ use image::{RgbImage, ImageFormat};
 use std::net::{SocketAddr, TcpStream};
 use orbit_types::{CapturedFrame, Request, StreamResponse, SnapResponse};
 use std::sync::mpsc::Sender;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::{thread, io};
 use std::io::BufReader;
 use chrono::Utc;
 use crate::STILL_CAPTURE_DELAY_MILLIS;
 use crate::streams::StreamSource;
+use crate::state::{PictureEventState, PictureEvent};
 
 pub enum Message {
     StreamDeregistered(StreamSource),
     NewImage(StreamSource, RgbImage),
-    Stills(u32, Vec<(SocketAddr, Vec<CapturedFrame>)>),
+    Stills(PictureEvent, Vec<(SocketAddr, Vec<CapturedFrame>)>),
 }
 
-pub fn spawn_capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message>, pictures_taken: Arc<AtomicU32>) {
+pub fn spawn_capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message>, picture_event_state: PictureEventState) {
     thread::spawn(move || {
         loop {
             // streaming mode
-            let pictures_taken_start = pictures_taken.load(Ordering::Relaxed);
+            let last_event = picture_event_state.current_event();
 
             let stream_handles: Vec<_> = addrs.iter()
                 .map(|&socket_addr| {
                     let message_sender = message_sender.clone();
-                    let pictures_taken = Arc::clone(&pictures_taken);
-                    thread::spawn(move || stream(socket_addr, &message_sender, pictures_taken_start, pictures_taken))
+                    let picture_event_state = picture_event_state.clone();
+                    thread::spawn(move || stream(socket_addr, &message_sender, last_event, picture_event_state))
                 })
                 .collect();
 
@@ -45,7 +44,7 @@ pub fn spawn_capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message
                     stills.push((socket_addr, snap_response.stills));
                 }
             }
-            message_sender.send(Message::Stills(pictures_taken_start, stills)).unwrap();
+            message_sender.send(Message::Stills(last_event, stills)).unwrap();
         }
     });
 }
@@ -53,8 +52,8 @@ pub fn spawn_capture_loop(addrs: Vec<SocketAddr>, message_sender: Sender<Message
 fn stream(
     socket_addr: SocketAddr,
     message_sender: &Sender<Message>,
-    pictures_taken_start: u32,
-    pictures_taken: Arc<AtomicU32>,
+    last_event: PictureEvent,
+    picture_event_state: PictureEventState,
 ) -> io::Result<()> {
     let mut connection = TcpStream::connect(socket_addr)?;
 
@@ -66,7 +65,7 @@ fn stream(
     let mut connection = BufReader::new(connection);
 
     loop {
-        if pictures_taken_start < pictures_taken.load(Ordering::Relaxed) { break Ok(()) }
+        if picture_event_state.has_been_new_event_since(last_event) { break Ok(()) }
 
         let response = StreamResponse::deserialize_from(&mut connection).unwrap();
 
@@ -95,9 +94,12 @@ fn stream(
 fn shutter(socket_addr: SocketAddr) -> io::Result<SnapResponse> {
     let mut connection = TcpStream::connect(socket_addr)?;
 
+    let requested_capture_time = Utc::now() + chrono::Duration::milliseconds(STILL_CAPTURE_DELAY_MILLIS);
+    println!("requested a frame at {:?}", requested_capture_time);
+
     bincode::serialize_into(
         &mut connection,
-        &Request::Snap(Utc::now() + chrono::Duration::milliseconds(STILL_CAPTURE_DELAY_MILLIS)),
+        &Request::Snap(requested_capture_time),
     ).unwrap();
 
     let mut connection = BufReader::new(connection);

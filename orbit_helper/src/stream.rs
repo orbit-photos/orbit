@@ -26,7 +26,6 @@ pub fn stream(
 
     while !should_stop.load(Ordering::Relaxed) {
         for (device_index, device_id) in known_devices.recently_added() {
-
             let writer = Arc::clone(&writer);
             let should_stop = Arc::clone(&should_stop);
 
@@ -47,8 +46,12 @@ fn spawn_stream_listener(
         println!("{:?} {:?}", device_index, device_id);
         match stream_inner(device_index, device_id, Arc::clone(&writer), Arc::clone(&should_stop)) {
             Ok(_) => {},
-            Err(OrbitError::TcpStreamFailed(_)) => should_stop.store(true, Ordering::Relaxed), // can't report lol
-            Err(OrbitError::WebcamFailed(_)) => {
+            Err(OrbitError::TcpStreamFailed(_)) => {
+                println!("tcp stream failed error in device {:?}", device_id);
+                should_stop.store(true, Ordering::Relaxed)
+            }, // can't report lol
+            Err(OrbitError::WebcamFailed(e)) => {
+                println!("webcam failed error {:?} on device {:?}", e, device_id);
                 // ignore error because nothing to do
                 let _ = StreamResponse::Stop(device_id).serialize_into(&mut *writer.lock().unwrap());
             }

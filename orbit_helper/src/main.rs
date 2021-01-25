@@ -28,7 +28,7 @@ const POLL_TIMEOUT_MILLIS: c_int = 1000;
 // remember
 const NEW_DEVICE_CHECK: Duration = Duration::from_secs(1);
 const SNAP_FORMAT: Format = new_format(1280, 720, ACCEPTABLE_FORMAT);
-const STREAM_FORMAT: Format = new_format(300, 144, ACCEPTABLE_FORMAT);
+const STREAM_FORMAT: Format = new_format(640, 360, ACCEPTABLE_FORMAT);
 const ACCEPTABLE_FORMAT: &[u8; 4] = b"MJPG";
 const CRASH_RETRY_DELAY: Duration = Duration::from_secs(2);
 

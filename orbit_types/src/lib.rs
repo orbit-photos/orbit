@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 use v4l::buffer::StreamItem;
 use v4l::{Buffer, Format, Timestamp};
 use serde::{Serialize, Deserialize};
-use std::time;
 use std::io::{Write, Read};
 
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
@@ -133,6 +132,8 @@ impl<'a> CapturedFrame {
 }
 
 fn timestamp_to_utc(timestamp: Timestamp, boot_time_utc: DateTime<Utc>) -> DateTime<Utc> {
-    let time_after_boot = chrono::Duration::from_std(time::Duration::from(timestamp)).unwrap();
+    let time_after_boot = chrono::Duration::seconds(timestamp.sec as i64)
+        + chrono::Duration::microseconds(timestamp.usec as i64);
+
     boot_time_utc + time_after_boot
 }
