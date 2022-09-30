@@ -8,7 +8,7 @@ Run the command `nm-connection-editor`, select the ethernet option,
 then go to the IPv4 Settings tab. For the 'Method' dropdown, select 'Shared to other computers'.
 Then, Add a new row to the 'Address' table, with Address=192.168.2.1, Netmask=24, and Gateway blank.
 
-## Necessery packages:
+## Necessary packages:
 
 * Packages needed for building ffmpeg-sys-next Rust library including:
   ffmpeg clang libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev
